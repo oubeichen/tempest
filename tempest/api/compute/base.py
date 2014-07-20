@@ -265,16 +265,6 @@ class BaseComputeTest(tempest.test.BaseTestCase):
 
         return resp, body
 
-    @classmethod
-    def create_test_server_group(cls, name="", policy=[]):
-        if not name:
-            name = data_utils.rand_name(cls.__name__ + "-Server-Group")
-        if not policy:
-            policy = ['affinity']
-        resp, body = cls.servers_client.create_server_group(name, policy)
-        cls.server_groups.append(body['id'])
-        return resp, body
-
     def wait_for(self, condition):
         """Repeatedly calls condition() until a timeout."""
         start_time = int(time.time())
