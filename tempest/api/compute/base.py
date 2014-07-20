@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import time
+
 from tempest import clients
 from tempest.common.utils import data_utils
 from tempest import config
@@ -262,6 +264,31 @@ class BaseComputeTest(tempest.test.BaseTestCase):
         cls.security_groups.append(body)
 
         return resp, body
+
+    @classmethod
+    def create_test_server_group(cls, name="", policy=[]):
+        if not name:
+            name = data_utils.rand_name(cls.__name__ + "-Server-Group")
+        if not policy:
+            policy = ['affinity']
+        resp, body = cls.servers_client.create_server_group(name, policy)
+        cls.server_groups.append(body['id'])
+        return resp, body
+
+    def wait_for(self, condition):
+        """Repeatedly calls condition() until a timeout."""
+        start_time = int(time.time())
+        while True:
+            try:
+                condition()
+            except Exception:
+                pass
+            else:
+                return
+            if int(time.time()) - start_time >= self.build_timeout:
+                condition()
+                return
+            time.sleep(self.build_interval)
 
     @staticmethod
     def _delete_volume(volumes_client, volume_id):
