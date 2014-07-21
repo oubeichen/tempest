@@ -169,7 +169,7 @@ def create_users(users):
 
 def collect_users(users):
     global USERS
-    LOG.info("Creating users")
+    LOG.info("Collecting users")
     admin = keystone_admin()
     for u in users:
         tenant = admin.identity.get_tenant_by_name(u['tenant'])
@@ -192,7 +192,9 @@ class JavelinCheck(unittest.TestCase):
         self.check_users()
         self.check_objects()
         self.check_servers()
-        self.check_volumes()
+        # TODO(sdague): Volumes not yet working, bring it back once the
+        # code is self testing.
+        # self.check_volumes()
 
     def check_users(self):
         """Check that the users we expect to exist, do.
@@ -200,6 +202,7 @@ class JavelinCheck(unittest.TestCase):
         We don't use the resource list for this because we need to validate
         that things like tenantId didn't drift across versions.
         """
+        LOG.info("checking users")
         for name, user in self.users.iteritems():
             client = keystone_admin()
             _, found = client.identity.get_user(user['id'])
@@ -215,6 +218,7 @@ class JavelinCheck(unittest.TestCase):
 
     def check_objects(self):
         """Check that the objects created are still there."""
+        LOG.info("checking objects")
         for obj in self.res['objects']:
             client = client_for_user(obj['owner'])
             r, contents = client.objects.get_object(
@@ -224,6 +228,7 @@ class JavelinCheck(unittest.TestCase):
 
     def check_servers(self):
         """Check that the servers are still up and running."""
+        LOG.info("checking servers")
         for server in self.res['servers']:
             client = client_for_user(server['owner'])
             found = _get_server_by_name(client, server['name'])
@@ -240,6 +245,7 @@ class JavelinCheck(unittest.TestCase):
 
     def check_volumes(self):
         """Check that the volumes are still there and attached."""
+        LOG.info("checking volumes")
         for volume in self.res['volumes']:
             client = client_for_user(volume['owner'])
             found = _get_volume_by_name(client, volume['name'])
@@ -284,6 +290,12 @@ def create_objects(objects):
 #######################
 
 
+def _resolve_image(image, imgtype):
+    name = image[imgtype]
+    fname = os.path.join(OPTS.devstack_base, image['imgdir'], name)
+    return name, fname
+
+
 def create_images(images):
     for image in images:
         client = client_for_user(image['owner'])
@@ -297,20 +309,23 @@ def create_images(images):
         # special handling for 3 part image
         extras = {}
         if image['format'] == 'ami':
+            name, fname = _resolve_image(image, 'aki')
             r, aki = client.images.create_image(
-                'javelin_' + image['aki'], 'aki', 'aki')
-            client.images.store_image(aki.get('id'), open(image['aki'], 'r'))
+                'javelin_' + name, 'aki', 'aki')
+            client.images.store_image(aki.get('id'), open(fname, 'r'))
             extras['kernel_id'] = aki.get('id')
 
+            name, fname = _resolve_image(image, 'ari')
             r, ari = client.images.create_image(
-                'javelin_' + image['ari'], 'ari', 'ari')
-            client.images.store_image(ari.get('id'), open(image['ari'], 'r'))
+                'javelin_' + name, 'ari', 'ari')
+            client.images.store_image(ari.get('id'), open(fname, 'r'))
             extras['ramdisk_id'] = ari.get('id')
 
+        _, fname = _resolve_image(image, 'file')
         r, body = client.images.create_image(
             image['name'], image['format'], image['format'], **extras)
         image_id = body.get('id')
-        client.images.store_image(image_id, open(image['file'], 'r'))
+        client.images.store_image(image_id, open(fname, 'r'))
 
 
 #######################
@@ -407,8 +422,10 @@ def create_resources():
     create_objects(RES['objects'])
     create_images(RES['images'])
     create_servers(RES['servers'])
-    create_volumes(RES['volumes'])
-    attach_volumes(RES['volumes'])
+    # TODO(sdague): volumes definition doesn't work yet, bring it
+    # back once we're actually executing the code
+    # create_volumes(RES['volumes'])
+    # attach_volumes(RES['volumes'])
 
 
 def get_options():
@@ -423,6 +440,11 @@ def get_options():
                         required=True,
                         metavar='resourcefile.yaml',
                         help='Resources definition yaml file')
+    parser.add_argument(
+        '-d', '--devstack-base',
+        required=True,
+        metavar='/opt/stack/old',
+        help='Devstack base directory for retrieving artifacts')
     # auth bits, letting us also just source the devstack openrc
     parser.add_argument('--os-username',
                         metavar='<auth-user-name>',
