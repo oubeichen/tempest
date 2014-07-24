@@ -29,6 +29,7 @@ class AttachVolumeTestJSON(base.BaseV2ComputeTest):
         super(AttachVolumeTestJSON, self).__init__(*args, **kwargs)
         self.server = None
         self.volume = None
+        self.attachment = None
         self.attached = False
 
     @classmethod
@@ -68,9 +69,10 @@ class AttachVolumeTestJSON(base.BaseV2ComputeTest):
                                                    'available')
 
         # Attach the volume to the server
-        self.servers_client.attach_volume(self.server['id'],
-                                          self.volume['id'],
-                                          device='/dev/%s' % self.device)
+        _, body = self.servers_client.attach_volume(self.server['id'],
+                                                    self.volume['id'],
+                                                    device='/dev/%s' % self.device)
+        self.attachment = body['volumeAttachment']
         self.volumes_client.wait_for_volume_status(self.volume['id'], 'in-use')
 
         self.attached = True
@@ -111,6 +113,35 @@ class AttachVolumeTestJSON(base.BaseV2ComputeTest):
                                                   self.server['adminPass'])
         partitions = linux_client.get_partitions()
         self.assertNotIn(self.device, partitions)
+
+    @test.attr(type='gate')
+    def test_list_get_volume(self):
+        # Stop and Start a server with an attached volume, ensuring that
+        # the volume remains attached.
+        self._create_and_attach()
+
+        self.servers_client.stop(self.server['id'])
+        self.servers_client.wait_for_server_status(self.server['id'],
+                                                   'SHUTOFF')
+
+        self.servers_client.start(self.server['id'])
+        self.servers_client.wait_for_server_status(self.server['id'], 'ACTIVE')
+
+        device_path = '/dev/%s' % self.device
+        resp, attachments = self.servers_client.list_volume_attachment(self.server['id'])
+
+        self.assertIn(self.attachment['id'], map(lambda x: x['id'], attachments))
+        self.assertIn(self.server['id'], map(lambda x: x['serverId'], attachments))
+        self.assertIn(self.volume['id'], map(lambda x: x['volumeId'], attachments))
+        self.assertIn(device_path, map(lambda x: x['device'], attachments))
+
+        resp, attachment = self.servers_client.get_volume_attachment(self.server['id'],
+                                                                     self.volume['id'])
+
+        self.assertEqual(self.attachment['id'], attachment['id'])
+        self.assertEqual(self.server['id'], attachment['serverId'])
+        self.assertEqual(self.volume['id'], attachment['volumeId'])
+        self.assertEqual(device_path, attachment['device'])
 
 
 class AttachVolumeTestXML(AttachVolumeTestJSON):
