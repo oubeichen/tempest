@@ -28,6 +28,7 @@ import yaml
 import argparse
 
 import tempest.auth
+from tempest import config
 from tempest import exceptions
 from tempest.services.compute.json import flavors_client
 from tempest.services.compute.json import servers_client
@@ -218,6 +219,8 @@ class JavelinCheck(unittest.TestCase):
 
     def check_objects(self):
         """Check that the objects created are still there."""
+        if 'objects' not in self.res:
+            return
         LOG.info("checking objects")
         for obj in self.res['objects']:
             client = client_for_user(obj['owner'])
@@ -228,6 +231,8 @@ class JavelinCheck(unittest.TestCase):
 
     def check_servers(self):
         """Check that the servers are still up and running."""
+        if 'servers' not in self.res:
+            return
         LOG.info("checking servers")
         for server in self.res['servers']:
             client = client_for_user(server['owner'])
@@ -239,12 +244,18 @@ class JavelinCheck(unittest.TestCase):
             r, found = client.servers.get_server(found['id'])
             # get the ipv4 address
             addr = found['addresses']['private'][0]['addr']
-            self.assertEqual(os.system("ping -c 1 " + addr), 0,
-                             "Server %s is not pingable at %s" % (
-                                 server['name'], addr))
+            for count in range(60):
+                return_code = os.system("ping -c1 " + addr)
+                if return_code is 0:
+                    break
+            self.assertNotEqual(count, 59,
+                               "Server %s is not pingable at %s" % (
+                               server['name'], addr))
 
     def check_volumes(self):
         """Check that the volumes are still there and attached."""
+        if 'volumes' not in self.res:
+            return
         LOG.info("checking volumes")
         for volume in self.res['volumes']:
             client = client_for_user(volume['owner'])
@@ -273,6 +284,8 @@ def _file_contents(fname):
 
 
 def create_objects(objects):
+    if not objects:
+        return
     LOG.info("Creating objects")
     for obj in objects:
         LOG.debug("Object %s" % obj)
@@ -297,6 +310,9 @@ def _resolve_image(image, imgtype):
 
 
 def create_images(images):
+    if not images:
+        return
+    LOG.info("Creating images")
     for image in images:
         client = client_for_user(image['owner'])
 
@@ -304,6 +320,7 @@ def create_images(images):
         r, body = client.images.image_list()
         names = [x['name'] for x in body]
         if image['name'] in names:
+            LOG.info("Image '%s' already exists" % image['name'])
             continue
 
         # special handling for 3 part image
@@ -359,15 +376,39 @@ def _get_flavor_by_name(client, name):
 
 
 def create_servers(servers):
+    if not servers:
+        return
+    LOG.info("Creating servers")
     for server in servers:
         client = client_for_user(server['owner'])
 
         if _get_server_by_name(client, server['name']):
+            LOG.info("Server '%s' already exists" % server['name'])
             continue
 
         image_id = _get_image_by_name(client, server['image'])['id']
         flavor_id = _get_flavor_by_name(client, server['flavor'])['id']
-        client.servers.create_server(server['name'], image_id, flavor_id)
+        resp, body = client.servers.create_server(server['name'], image_id,
+                                                 flavor_id)
+        server_id = body['id']
+        client.servers.wait_for_server_status(server_id, 'ACTIVE')
+
+
+def destroy_servers(servers):
+    if not servers:
+        return
+    LOG.info("Destroying servers")
+    for server in servers:
+        client = client_for_user(server['owner'])
+
+        response = _get_server_by_name(client, server['name'])
+        if not response:
+            LOG.info("Server '%s' does not exist" % server['name'])
+            continue
+
+        client.servers.delete_server(response['id'])
+        client.servers.wait_for_server_termination(response['id'],
+                ignore_error=True)
 
 
 #######################
@@ -428,6 +469,23 @@ def create_resources():
     # attach_volumes(RES['volumes'])
 
 
+def destroy_resources():
+    LOG.info("Destroying Resources")
+    # Destroy in inverse order of create
+
+    # Future
+    # detach_volumes
+    # destroy_volumes
+
+    destroy_servers(RES['servers'])
+    LOG.warn("Destroy mode incomplete")
+    # destroy_images
+    # destroy_objects
+
+    # destroy_users
+    # destroy_tenants
+
+
 def get_options():
     global OPTS
     parser = argparse.ArgumentParser(
@@ -440,11 +498,17 @@ def get_options():
                         required=True,
                         metavar='resourcefile.yaml',
                         help='Resources definition yaml file')
+
     parser.add_argument(
         '-d', '--devstack-base',
         required=True,
         metavar='/opt/stack/old',
         help='Devstack base directory for retrieving artifacts')
+    parser.add_argument(
+        '-c', '--config-file',
+        metavar='/etc/tempest.conf',
+        help='path to javelin2(tempest) config file')
+
     # auth bits, letting us also just source the devstack openrc
     parser.add_argument('--os-username',
                         metavar='<auth-user-name>',
@@ -464,6 +528,8 @@ def get_options():
         print("ERROR: Unknown mode -m %s\n" % OPTS.mode)
         parser.print_help()
         sys.exit(1)
+    if OPTS.config_file:
+        config.CONF.set_config_path(OPTS.config_file)
 
 
 def setup_logging(debug=True):
@@ -496,10 +562,12 @@ def main():
         checker = JavelinCheck(USERS, RES)
         checker.check()
     elif OPTS.mode == 'destroy':
-        LOG.warn("Destroy mode not yet implemented")
+        collect_users(RES['users'])
+        destroy_resources()
     else:
         LOG.error('Unknown mode %s' % OPTS.mode)
         return 1
+    LOG.info('javelin2 successfully finished')
     return 0
 
 if __name__ == "__main__":

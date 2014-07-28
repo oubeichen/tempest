@@ -11,6 +11,7 @@
 #    under the License.
 
 import os.path
+import yaml
 
 from tempest import clients
 from tempest.common.utils import data_utils
@@ -84,11 +85,8 @@ class BaseOrchestrationTest(tempest.test.BaseTestCase):
                 pass
 
         for stack_identifier in cls.stacks:
-            try:
-                cls.client.wait_for_stack_status(
-                    stack_identifier, 'DELETE_COMPLETE')
-            except exceptions.NotFound:
-                pass
+            cls.client.wait_for_stack_status(
+                stack_identifier, 'DELETE_COMPLETE')
 
     @classmethod
     def _create_keypair(cls, name_start='keypair-heat-'):
@@ -125,13 +123,21 @@ class BaseOrchestrationTest(tempest.test.BaseTestCase):
                 pass
 
     @classmethod
-    def load_template(cls, name, ext='yaml'):
+    def read_template(cls, name, ext='yaml'):
         loc = ["stacks", "templates", "%s.%s" % (name, ext)]
         fullpath = os.path.join(os.path.dirname(__file__), *loc)
 
         with open(fullpath, "r") as f:
             content = f.read()
             return content
+
+    @classmethod
+    def load_template(cls, name, ext='yaml'):
+        loc = ["stacks", "templates", "%s.%s" % (name, ext)]
+        fullpath = os.path.join(os.path.dirname(__file__), *loc)
+
+        with open(fullpath, "r") as f:
+            return yaml.safe_load(f)
 
     @classmethod
     def tearDownClass(cls):
