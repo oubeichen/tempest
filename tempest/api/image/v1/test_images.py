@@ -211,6 +211,49 @@ class ListImagesTest(base.BaseV1ImageTest):
         self.assertFalse(self.size42_set <= result_set)
 
     @test.attr(type='gate')
+    def test_index_no_params_detail(self):
+        _, images_list = self.client.image_list_detail()
+        image_list = map(lambda x: x['id'], images_list)
+        for image_id in self.created_images:
+            self.assertIn(image_id, image_list)
+
+    @test.attr(type='gate')
+    def test_index_disk_format_detail(self):
+        _, images_list = self.client.image_list_detail(disk_format='ami')
+        for image in images_list:
+            self.assertEqual(image['disk_format'], 'ami')
+        result_set = set(map(lambda x: x['id'], images_list))
+        self.assertTrue(self.ami_set <= result_set)
+        self.assertFalse(self.created_set - self.ami_set <= result_set)
+
+    @test.attr(type='gate')
+    def test_index_container_format_detail(self):
+        _, images_list = self.client.image_list_detail(container_format='bare')
+        for image in images_list:
+            self.assertEqual(image['container_format'], 'bare')
+        result_set = set(map(lambda x: x['id'], images_list))
+        self.assertTrue(self.bare_set <= result_set)
+        self.assertFalse(self.created_set - self.bare_set <= result_set)
+
+    @test.attr(type='gate')
+    def test_index_max_size_detail(self):
+        _, images_list = self.client.image_list_detail(size_max=42)
+        for image in images_list:
+            self.assertTrue(image['size'] <= 42)
+        result_set = set(map(lambda x: x['id'], images_list))
+        self.assertTrue(self.size42_set <= result_set)
+        self.assertFalse(self.created_set - self.size42_set <= result_set)
+
+    @test.attr(type='gate')
+    def test_index_min_size_detail(self):
+        _, images_list = self.client.image_list_detail(size_min=142)
+        for image in images_list:
+            self.assertTrue(image['size'] >= 142)
+        result_set = set(map(lambda x: x['id'], images_list))
+        self.assertTrue(self.size142_set <= result_set)
+        self.assertFalse(self.size42_set <= result_set)
+
+    @test.attr(type='gate')
     def test_index_status_active_detail(self):
         _, images_list = self.client.image_list_detail(status='active',
                                                        sort_key='size',
