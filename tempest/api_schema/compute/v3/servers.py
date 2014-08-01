@@ -181,3 +181,27 @@ list_servers_detail['response_body']['properties']['servers']['items'][
 # attributes. So they are not 'required'.
 list_servers_detail['response_body']['properties']['servers']['items'][
     'required'].append('host_id')
+
+rebuild_server = copy.deepcopy(update_server)
+rebuild_server['status_code'] = [202]
+
+rebuild_server_with_admin_pass = copy.deepcopy(rebuild_server)
+rebuild_server_with_admin_pass['response_body']['properties']['server'][
+    'properties'].update({'admin_password': {'type': 'string'}})
+rebuild_server_with_admin_pass['response_body']['properties']['server'][
+    'required'].append('admin_password')
+
+rescue_server_with_admin_pass = {
+    'status_code': [202],
+    'response_body': {
+        'type': 'object',
+        'properties': {
+            'admin_password': {'type': 'string'}
+        },
+        'required': ['admin_password']
+    }
+}
+
+rescue_server = copy.deepcopy(rescue_server_with_admin_pass)
+del rescue_server['response_body']['properties']
+del rescue_server['response_body']['required']

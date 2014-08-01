@@ -278,7 +278,12 @@ class ServersClientJSON(rest_client.RestClient):
         if 'disk_config' in kwargs:
             kwargs['OS-DCF:diskConfig'] = kwargs['disk_config']
             del kwargs['disk_config']
-        return self.action(server_id, 'rebuild', 'server', None, **kwargs)
+        if CONF.compute_feature_enabled.enable_instance_password:
+            rebuild_schema = schema.rebuild_server_with_admin_pass
+        else:
+            rebuild_schema = schema.rebuild_server
+        return self.action(server_id, 'rebuild', 'server',
+                           rebuild_schema, **kwargs)
 
     def resize(self, server_id, flavor_ref, **kwargs):
         """Changes the flavor of a server."""
@@ -474,7 +479,8 @@ class ServersClientJSON(rest_client.RestClient):
 
     def rescue_server(self, server_id, **kwargs):
         """Rescue the provided server."""
-        return self.action(server_id, 'rescue', 'adminPass', None, **kwargs)
+        return self.action(server_id, 'rescue', 'adminPass',
+                           schema.rescue_server, **kwargs)
 
     def unrescue_server(self, server_id):
         """Unrescue the provided server."""
