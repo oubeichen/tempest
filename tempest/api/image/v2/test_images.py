@@ -269,6 +269,18 @@ class ListImagesTest(base.BaseV2ImageTest):
             self.assertIn(tag, image_tags)
 
     @test.attr(type='gate')
+    def test_list_images_param_member_status(self):
+        # Test to get images by member status
+        params = {"member_status": "rejected"}
+        _, images_list = self.client.image_list(params=params)
+        image_id_list = map(lambda x: x['id'], images_list)
+
+        for image_id in image_id_list:
+            memberships = self.client.get_image_membership(image_id)
+            self.assertTrue(any([i for i in memberships
+                                 if i['status'] == 'rejected']))
+
+    @test.attr(type='gate')
     def test_list_images_param_marker(self):
         # Test to get images by marker
         params = {"marker": self.created_images[3]}
