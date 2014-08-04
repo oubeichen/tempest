@@ -269,6 +269,15 @@ class ListImagesTest(base.BaseV2ImageTest):
             self.assertIn(tag, image_tags)
 
     @test.attr(type='gate')
+    def test_list_images_param_marker(self):
+        # Test to get images by marker
+        params = {"marker": self.created_images[3]}
+        _, images_list = self.client.image_list(params=params)
+        image_id_list = map(lambda x: x['id'], images_list)
+
+        self.assertNotIn(self.created_images[3], image_id_list)
+
+    @test.attr(type='gate')
     def test_get_image_schema(self):
         # Test to get image schema
         schema = "image"
