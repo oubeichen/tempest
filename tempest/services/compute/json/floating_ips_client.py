@@ -53,6 +53,7 @@ class FloatingIPsClientJSON(rest_client.RestClient):
     def create_floating_ip(self, pool_name=None):
         """Allocate a floating IP to the project."""
         url = 'os-floating-ips'
+        pool_name = CONF.compute.ext_network_for_floating_ip
         post_body = {'pool': pool_name}
         post_body = json.dumps(post_body)
         resp, body = self.post(url, post_body)
