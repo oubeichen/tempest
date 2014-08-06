@@ -343,10 +343,6 @@
 # (integer value)
 #shelved_offload_time=0
 
-# Expected external network's name for allocating floating
-# IPs (string value)
-#ext_network_for_floating_ip=None
-
 # Unallocated floating IP range, which will be used to test
 # the floating IP bulk feature for CRUD operation. (string
 # value)

@@ -63,7 +63,6 @@ class FloatingIPsClientXML(rest_client.RestClient):
     def create_floating_ip(self, pool_name=None):
         """Allocate a floating IP to the project."""
         url = 'os-floating-ips'
-        pool_name = CONF.compute.ext_network_for_floating_ip
         if pool_name:
             doc = xml_utils.Document()
             pool = xml_utils.Element("pool")

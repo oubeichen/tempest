@@ -151,8 +151,7 @@ ComputeGroup = [
                help='Valid secondary flavor to be used in tests.'),
     cfg.StrOpt('default_network_id',
                default="",
-               help="Default valid network id to be used in tests for "
-                    "creating an instance."),
+               help="Default valid network id to be used in tests for creating an instance."),
     cfg.StrOpt('image_ssh_user',
                default="root",
                help="User name used to authenticate to an instance."),
@@ -252,10 +251,6 @@ ComputeGroup = [
                     'when shelved. This time should be the same as the time '
                     'of nova.conf, and some tests will run for as long as the '
                     'time.'),
-    cfg.StrOpt('ext_network_for_floating_ip',
-               default=None,
-               help="Expected external network's name for allocating "
-                    "floating IPs"),
     cfg.StrOpt('floating_ip_range',
                default='10.0.0.0/29',
                help='Unallocated floating IP range, which will be used to '
