@@ -346,8 +346,9 @@ class BaseNetworkTest(tempest.test.BaseTestCase):
         resp, body = cls.client.list_router_interfaces(router['id'])
         interfaces = body['ports']
         for i in interfaces:
-            cls.client.remove_router_interface_with_subnet_id(
-                router['id'], i['fixed_ips'][0]['subnet_id'])
+            if i['device_owner'] != 'network:router_gateway':
+                cls.client.remove_router_interface_with_subnet_id(
+                    router['id'], i['fixed_ips'][0]['subnet_id'])
         cls.client.delete_router(router['id'])
 
     @classmethod
