@@ -28,7 +28,10 @@ class VolumesV2ActionsTest(base.BaseVolumeTest):
     def setUpClass(cls):
         super(VolumesV2ActionsTest, cls).setUpClass()
         cls.client = cls.volumes_client
-        cls.image_client = cls.os.image_client
+        if _api_version == 1:
+            cls.image_client = cls.os.image_client
+        elif _api_version == 2:
+            cls.image_client = cls.os.image_client_v2
 
         # Create a test shared instance
         srv_name = data_utils.rand_name(cls.__name__ + '-Instance-')
@@ -153,3 +156,6 @@ class VolumesV1ActionsTest(VolumesV2ActionsTest):
 
 class VolumesV1ActionsTestXML(VolumesV1ActionsTest):
     _interface = "xml"
+
+class VolumesActionsV2Test(VolumesActionsTest):
+    _api_version = 2
