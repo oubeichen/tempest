@@ -85,6 +85,7 @@ class BaseComputeTest(tempest.test.BaseTestCase):
             cls.migrations_client = cls.os.migrations_client
             cls.security_group_default_rules_client = (
                 cls.os.security_group_default_rules_client)
+            cls.networks_client = cls.os.networks_client
 
         elif cls._api_version == 3:
             if not CONF.compute_feature_enabled.api_v3:
