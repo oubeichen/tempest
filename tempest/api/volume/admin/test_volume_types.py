@@ -24,6 +24,16 @@ CONF = config.CONF
 class VolumeTypesTest(base.BaseVolumeV1AdminTest):
     _interface = "json"
 
+    @classmethod
+    @test.safe_setup
+    def setUpClass(cls):
+        super(VolumeTypesTest, cls).setUpClass()
+
+        if cls._api_version == 1:
+            cls.client = cls.os_adm.volume_types_client
+        elif cls._api_version == 2:
+            cls.client = cls.os_adm.volume_types_v2_client
+
     def _delete_volume(self, volume_id):
         self.volumes_client.delete_volume(volume_id)
         self.volumes_client.wait_for_resource_deletion(volume_id)
@@ -151,3 +161,6 @@ class VolumeTypesTest(base.BaseVolumeV1AdminTest):
         _, deleted_encryption_type = self.client.get_encryption_type(
             encryption_type['volume_type_id'])
         self.assertEmpty(deleted_encryption_type)
+
+class VolumeTypesV2Test(VolumeTypesTest):
+    _api_version = 2

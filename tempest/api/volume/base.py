@@ -70,6 +70,7 @@ class BaseVolumeTest(tempest.test.BaseTestCase):
                 msg = "Volume API v2 is disabled"
                 raise cls.skipException(msg)
             cls.volumes_client = cls.os.volumes_v2_client
+            cls.snapshots_client = cls.os.snapshots_v2_client
             cls.volumes_extension_client = cls.os.volumes_v2_extension_client
             cls.availability_zone_client = (
                 cls.os.volume_v2_availability_zone_client)
@@ -105,8 +106,12 @@ class BaseVolumeTest(tempest.test.BaseTestCase):
     @classmethod
     def create_snapshot(cls, volume_id=1, **kwargs):
         """Wrapper utility that returns a test snapshot."""
-        _, snapshot = cls.snapshots_client.create_snapshot(volume_id,
-                                                           **kwargs)
+        resp, snapshot = cls.snapshots_client.create_snapshot(volume_id,
+                                                              **kwargs)
+        if cls._api_version == 1:
+            assert 200 == resp.status
+        elif cls._api_version == 2:
+            assert 202 == resp.status
         cls.snapshots.append(snapshot)
         cls.snapshots_client.wait_for_snapshot_status(snapshot['id'],
                                                       'available')
