@@ -62,7 +62,6 @@ from tempest.services.compute.json.tenant_usages_client import \
     TenantUsagesClientJSON
 from tempest.services.compute.json.volumes_extensions_client import \
     VolumesExtensionsClientJSON
-from tempest.services.compute.json.networks_client import NetworksClientJSON
 from tempest.services.compute.v3.json.agents_client import AgentsV3ClientJSON
 from tempest.services.compute.v3.json.aggregates_client import \
     AggregatesV3ClientJSON
@@ -119,7 +118,6 @@ from tempest.services.compute.xml.tenant_usages_client import \
     TenantUsagesClientXML
 from tempest.services.compute.xml.volumes_extensions_client import \
     VolumesExtensionsClientXML
-from tempest.services.compute.xml.networks_client import NetworksClientXML
 from tempest.services.data_processing.v1_1.client import DataProcessingClient
 from tempest.services.database.json.flavors_client import \
     DatabaseFlavorsClientJSON
@@ -240,8 +238,6 @@ class Manager(manager.Manager):
             self.extensions_client = ExtensionsClientXML(self.auth_provider)
             self.volumes_extensions_client = VolumesExtensionsClientXML(
                 self.auth_provider)
-            self.networks_client = NetworksClientXML(
-                self.auth_provider)
             self.floating_ips_client = FloatingIPsClientXML(
                 self.auth_provider)
             self.backups_client = BackupsClientXML(self.auth_provider)
@@ -320,8 +316,6 @@ class Manager(manager.Manager):
             self.extensions_client = ExtensionsClientJSON(
                 self.auth_provider)
             self.volumes_extensions_client = VolumesExtensionsClientJSON(
-                self.auth_provider)
-            self.networks_client = NetworksClientJSON(
                 self.auth_provider)
             self.floating_ips_client = FloatingIPsClientJSON(
                 self.auth_provider)
