@@ -29,6 +29,18 @@ def register_opt_group(conf, opt_group, options):
         conf.register_opt(opt, group=opt_group.name)
 
 
+auth_group = cfg.OptGroup(name='auth',
+                          title="Options for authentication and credentials")
+
+
+AuthGroup = [
+    cfg.StrOpt('test_accounts_file',
+               default='etc/accounts.yaml',
+               help="Path to the yaml file that contains the list of "
+                    "credentials to use for running tests"),
+]
+
+
 identity_group = cfg.OptGroup(name='identity',
                               title="Keystone Configuration Options")
 
@@ -269,6 +281,9 @@ ComputeFeaturesGroup = [
     cfg.BoolOpt('api_v3',
                 default=False,
                 help="If false, skip all nova v3 tests."),
+    cfg.BoolOpt('xml_api_v2',
+                default=True,
+                help="If false skip all v2 api tests with xml"),
     cfg.BoolOpt('disk_config',
                 default=True,
                 help="If false, skip disk config tests"),
@@ -288,6 +303,10 @@ ComputeFeaturesGroup = [
                 default=False,
                 help="Does the test environment support changing the admin "
                      "password?"),
+    cfg.BoolOpt('console_output',
+                default=True,
+                help="Does the test environment support obtaining instance "
+                     "serial console output?"),
     cfg.BoolOpt('resize',
                 default=False,
                 help="Does the test environment support resizing?"),
@@ -332,7 +351,11 @@ ComputeFeaturesGroup = [
                 default=True,
                 help='Enables returning of the instance password by the '
                      'relevant server API calls such as create, rebuild '
-                     'or rescue.')
+                     'or rescue.'),
+    cfg.BoolOpt('interface_attach',
+                default=True,
+                help='Does the test environment support dynamic network '
+                     'interface attachment?')
 ]
 
 
@@ -1016,6 +1039,7 @@ NegativeGroup = [
 
 
 def register_opts():
+    register_opt_group(cfg.CONF, auth_group, AuthGroup)
     register_opt_group(cfg.CONF, compute_group, ComputeGroup)
     register_opt_group(cfg.CONF, compute_features_group,
                        ComputeFeaturesGroup)
@@ -1064,6 +1088,7 @@ class TempestConfigPrivate(object):
     DEFAULT_CONFIG_FILE = "tempest.conf"
 
     def _set_attrs(self):
+        self.auth = cfg.CONF.auth
         self.compute = cfg.CONF.compute
         self.compute_feature_enabled = cfg.CONF['compute-feature-enabled']
         self.identity = cfg.CONF.identity
