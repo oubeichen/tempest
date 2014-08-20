@@ -282,6 +282,8 @@ class ServerActionsTestJSON(base.BaseV2ComputeTest):
     def test_resize_server_revert_from_stopped(self):
         self._test_resize_server_revert(stop=True)
 
+    @testtools.skipUnless(CONF.compute_feature_enabled.snapshot,
+                          'Snapshotting not available, backup not possible.')
     @test.attr(type='gate')
     def test_create_backup(self):
         # Positive test:create backup successfully and rotate backups correctly

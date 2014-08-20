@@ -192,6 +192,9 @@ from tempest.services.volume.v2.xml.availability_zone_client import \
 from tempest.services.volume.v2.xml.extensions_client import \
     ExtensionsV2ClientXML as VolumeV2ExtensionClientXML
 from tempest.services.volume.v2.xml.volumes_client import VolumesV2ClientXML
+from tempest.services.volume.v2.json.backups_client import BackupsV2ClientJSON
+from tempest.services.volume.v2.json.snapshots_client import SnapshotsV2ClientJSON
+from tempest.services.volume.v2.json.volume_types_client import VolumeV2TypesClientJSON
 from tempest.services.volume.xml.admin.volume_hosts_client import \
     VolumeHostsClientXML
 from tempest.services.volume.xml.admin.volume_quotas_client import \
@@ -206,6 +209,7 @@ from tempest.services.volume.xml.backups_client import BackupsClientXML
 from tempest.services.volume.xml.extensions_client import \
     ExtensionsClientXML as VolumeExtensionClientXML
 from tempest.services.volume.xml.snapshots_client import SnapshotsClientXML
+from tempest.services.volume.v2.xml.snapshots_client import SnapshotsV2ClientXML
 from tempest.services.volume.xml.volumes_client import VolumesClientXML
 
 CONF = config.CONF
@@ -243,6 +247,7 @@ class Manager(manager.Manager):
                 self.auth_provider)
             self.backups_client = BackupsClientXML(self.auth_provider)
             self.snapshots_client = SnapshotsClientXML(self.auth_provider)
+            self.snapshots_v2_client = SnapshotsV2ClientXML(self.auth_provider)
             self.volumes_client = VolumesClientXML(self.auth_provider)
             self.volumes_v2_client = VolumesV2ClientXML(self.auth_provider)
             self.volume_types_client = VolumeTypesClientXML(
@@ -321,10 +326,14 @@ class Manager(manager.Manager):
             self.floating_ips_client = FloatingIPsClientJSON(
                 self.auth_provider)
             self.backups_client = BackupsClientJSON(self.auth_provider)
+            self.backups_v2_client = BackupsV2ClientJSON(self.auth_provider)
             self.snapshots_client = SnapshotsClientJSON(self.auth_provider)
+            self.snapshots_v2_client = SnapshotsV2ClientJSON(self.auth_provider)
             self.volumes_client = VolumesClientJSON(self.auth_provider)
             self.volumes_v2_client = VolumesV2ClientJSON(self.auth_provider)
             self.volume_types_client = VolumeTypesClientJSON(
+                self.auth_provider)
+            self.volume_types_v2_client = VolumeV2TypesClientJSON(
                 self.auth_provider)
             self.identity_client = IdentityClientJSON(self.auth_provider)
             self.identity_v3_client = IdentityV3ClientJSON(

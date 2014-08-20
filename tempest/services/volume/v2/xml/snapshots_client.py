@@ -1,6 +1,3 @@
-# Copyright 2013 OpenStack Foundation
-# All Rights Reserved.
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -13,19 +10,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from tempest.api.volume import base
-from tempest import test
+from tempest.common import rest_client
 
+class SnapshotsV2ClientXML(rest_client.RestClient):
+    """Client class to send CRUD Volume API requests."""
+    TYPE = "xml"
 
-class VolumeHostsAdminTestsJSON(base.BaseVolumeV1AdminTest):
-    _interface = "json"
-
-    @test.attr(type='gate')
-    def test_list_hosts(self):
-        _, hosts = self.hosts_client.list_hosts()
-        self.assertTrue(len(hosts) >= 2, "No. of hosts are < 2,"
-                        "response of list hosts is: % s" % hosts)
-
-
-class VolumeHostsAdminTestsXML(VolumeHostsAdminTestsJSON):
-    _interface = 'xml'
+    def __init__(self, auth_provider):
+        super(SnapshotsV2ClientXML, self).__init__(auth_provider)
